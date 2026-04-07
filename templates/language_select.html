@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Select Language — Debug Code Event{% endblock %}
+
+{% block body %}
+<div class="page-wrapper">
+  <header class="top-bar">
+    <div class="top-bar__brand">🐛 Debug Code Event</div>
+    <div class="top-bar__user">
+      <span class="user-badge">{{ session.user_name }}</span>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn--ghost btn--sm">Logout</a>
+    </div>
+  </header>
+
+  <main class="lang-select-page">
+    <div class="lang-select-header">
+      <h2 class="page-title">Choose a Language</h2>
+      <p class="page-subtitle">Select a programming language to start debugging questions. You can attempt multiple languages.</p>
+    </div>
+
+    <div class="lang-grid">
+      {% for lang in languages %}
+        <div class="lang-card {% if lang.id in completed_lang_ids %}lang-card--done{% endif %}">
+          <div class="lang-card__icon">
+            {% if lang.name|lower == 'python' %}🐍
+            {% elif lang.name|lower == 'c' %}🔵
+            {% elif lang.name|lower == 'java' %}☕
+            {% elif lang.name|lower == 'c++' %}⚡
+            {% else %}💻{% endif %}
+          </div>
+          <h3 class="lang-card__name">{{ lang.name }}</h3>
+          {% if lang.id in completed_lang_ids %}
+            <span class="badge badge--success">Completed ✓</span>
+            <a href="{{ url_for('exam.start_language', lang_id=lang.id) }}" class="btn btn--ghost btn--sm mt-2">Review</a>
+          {% else %}
+            <a href="{{ url_for('exam.start_language', lang_id=lang.id) }}" class="btn btn--primary">Start Questions →</a>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <p>No languages available yet. Please contact the administrator.</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="lang-select-footer">
+      <a href="{{ url_for('exam.complete') }}" class="btn btn--outline">View My Score Summary</a>
+    </div>
+  </main>
+</div>
+{% endblock %}

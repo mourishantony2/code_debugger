@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}{% if problem %}Edit Problem{% else %}Add Problem{% endif %} — Admin{% endblock %}
+
+{% block body %}
+<div class="admin-page">
+  <header class="admin-topbar">
+    <div class="admin-topbar__brand">⚙ Admin — Debug Code Event</div>
+    <div class="admin-topbar__actions">
+      <a href="{{ url_for('admin.dashboard') }}" class="btn btn--ghost btn--sm">← Dashboard</a>
+      <a href="{{ url_for('admin.logout') }}" class="btn btn--ghost btn--sm">Logout</a>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <div class="admin-form-card">
+      <h2 class="admin-section-title">
+        {% if problem %}✏ Edit Problem{% else %}➕ Add Problem{% endif %}
+      </h2>
+
+      <form
+        method="POST"
+        action="{% if problem %}{{ url_for('admin.edit_problem', prob_id=problem.id) }}{% else %}{{ url_for('admin.add_problem') }}{% endif %}"
+        class="admin-form"
+        autocomplete="off"
+      >
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Language</label>
+            <select name="language_id" class="form-input form-select" required id="lang-select">
+              {% for lang in languages %}
+                <option value="{{ lang.id }}"
+                  {% if problem and problem.language_id == lang.id %}selected{% endif %}>
+                  {{ lang.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Question Number</label>
+            <input
+              type="number"
+              name="question_number"
+              class="form-input"
+              min="1"
+              value="{{ problem.question_number if problem else 1 }}"
+              required
+              id="q-number"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Time Limit (seconds)</label>
+            <input
+              type="number"
+              name="time_limit"
+              class="form-input"
+              min="30"
+              max="3600"
+              value="{{ problem.time_limit if problem else 300 }}"
+              required
+              id="time-limit"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Problem Name / Title</label>
+          <input
+            type="text"
+            name="problem_name"
+            class="form-input"
+            placeholder="e.g. Fix the Fibonacci Function"
+            value="{{ problem.problem_name if problem else '' }}"
+            required
+            id="problem-name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Error Code <span class="label-hint">(shown to participant)</span></label>
+          <textarea
+            name="error_code"
+            class="code-editor code-editor--admin"
+            placeholder="Paste the buggy code here..."
+            required
+            id="error-code"
+            spellcheck="false"
+          >{{ problem.error_code if problem else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Correct Code <span class="label-hint">(hidden — used for comparison)</span></label>
+          <textarea
+            name="correct_code"
+            class="code-editor code-editor--admin"
+            placeholder="Paste the correct/expected code here..."
+            required
+            id="correct-code"
+            spellcheck="false"
+          >{{ problem.correct_code if problem else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Expected Output <span class="label-hint">(shown to participant on correct answer)</span></label>
+          <textarea
+            name="expected_output"
+            class="code-editor code-editor--admin code-editor--short"
+            placeholder="e.g. 0 1 1 2 3 5 8"
+            required
+            id="expected-output"
+            spellcheck="false"
+          >{{ problem.expected_output if problem else '' }}</textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary" id="save-problem-btn">
+            {% if problem %}Update Problem{% else %}Add Problem{% endif %}
+          </button>
+          <a href="{{ url_for('admin.dashboard') }}" class="btn btn--ghost">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+{% endblock %}

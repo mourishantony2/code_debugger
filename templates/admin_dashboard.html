@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — Debug Code Event{% endblock %}
+
+{% block body %}
+<div class="admin-page">
+  <header class="admin-topbar">
+    <div class="admin-topbar__brand">⚙ Admin Dashboard</div>
+    <div class="admin-topbar__actions">
+      <a href="{{ url_for('admin.export') }}" class="btn btn--success btn--sm">⬇ Export Excel</a>
+      <a href="{{ url_for('auth.register') }}" class="btn btn--ghost btn--sm" target="_blank">Participant Portal ↗</a>
+      <a href="{{ url_for('admin.logout') }}" class="btn btn--ghost btn--sm">Logout</a>
+    </div>
+  </header>
+
+  <div class="admin-layout">
+    <nav class="admin-sidebar">
+      <button class="sidebar-tab sidebar-tab--active" data-tab="languages">🌐 Languages</button>
+      <button class="sidebar-tab" data-tab="problems">📝 Problems</button>
+      <button class="sidebar-tab" data-tab="participants">👥 Participants</button>
+      <button class="sidebar-tab" data-tab="submissions">📊 Submissions</button>
+      <button class="sidebar-tab" data-tab="leaderboard">🏆 Leaderboard</button>
+      <button class="sidebar-tab sidebar-tab--danger" data-tab="violations">
+        🚨 Violations
+        {% if violations %}<span class="viol-count">{{ violations|length }}</span>{% endif %}
+      </button>
+    </nav>
+
+    <main class="admin-content">
+
+      <!-- ═══ LANGUAGES ══════════════════════════════════════════════ -->
+      <section class="admin-tab-panel" id="panel-languages">
+        <div class="panel-header">
+          <h2 class="panel-title">Languages</h2>
+        </div>
+        <form method="POST" action="{{ url_for('admin.add_language') }}" class="inline-form">
+          <input type="text" name="language_name" class="form-input form-input--inline"
+                 placeholder="New language name (e.g. Java)" required />
+          <button type="submit" class="btn btn--primary btn--sm">Add Language</button>
+        </form>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Language</th><th>Problems</th><th>Visibility</th><th>Actions</th></tr></thead>
+            <tbody>
+              {% for lang in languages %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td><span class="lang-pill">{{ lang.name }}</span></td>
+                <td>{{ lang.problems|length if lang.problems else 0 }}</td>
+                <td>
+                  {% if lang.is_active %}
+                    <span class="status-badge status-badge--on">🟢 Visible</span>
+                  {% else %}
+                    <span class="status-badge status-badge--off">🔴 Hidden</span>
+                  {% endif %}
+                </td>
+                <td class="action-cell">
+                  <form method="POST" action="{{ url_for('admin.toggle_language', lang_id=lang.id) }}" style="display:inline">
+                    {% if lang.is_active %}
+                      <button class="btn btn--warning btn--xs">🙈 Hide</button>
+                    {% else %}
+                      <button class="btn btn--success btn--xs">👁 Show</button>
+                    {% endif %}
+                  </form>
+                  <form method="POST" action="{{ url_for('admin.delete_language', lang_id=lang.id) }}"
+                        style="display:inline"
+                        onsubmit="return confirm('Delete {{ lang.name }}? All its problems will also be deleted.')">
+                    <button class="btn btn--danger btn--xs">🗑 Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="5" class="empty-cell">No languages yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="info-box mt-4">
+          💡 <strong>Tip:</strong> Use <em>Hide</em> to lock a language between rounds. Problems and data are preserved. Use <em>Show</em> to re-enable for the next round.
+        </div>
+      </section>
+
+      <!-- ═══ PROBLEMS ═══════════════════════════════════════════════ -->
+      <section class="admin-tab-panel" id="panel-problems" style="display:none">
+        <div class="panel-header">
+          <h2 class="panel-title">Problems</h2>
+          <a href="{{ url_for('admin.add_problem') }}" class="btn btn--primary btn--sm">➕ Add Problem</a>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Q#</th><th>Language</th><th>Problem Name</th><th>Time Limit</th><th>Actions</th></tr></thead>
+            <tbody>
+              {% for prob in problems %}
+              <tr>
+                <td>{{ prob.question_number }}</td>
+                <td><span class="lang-pill">{{ prob.language.name }}</span></td>
+                <td>{{ prob.problem_name }}</td>
+                <td>{{ prob.time_limit }}s</td>
+                <td class="action-cell">
+                  <a href="{{ url_for('admin.edit_problem', prob_id=prob.id) }}" class="btn btn--warning btn--xs">Edit</a>
+                  <form method="POST" action="{{ url_for('admin.delete_problem', prob_id=prob.id) }}"
+                        style="display:inline" onsubmit="return confirm('Delete this problem?')">
+                    <button class="btn btn--danger btn--xs">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="5" class="empty-cell">No problems added yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═══ PARTICIPANTS ════════════════════════════════════════════ -->
+      <section class="admin-tab-panel" id="panel-participants" style="display:none">
+        <div class="panel-header">
+          <h2 class="panel-title">Participants <span class="count-badge">{{ users|length }}</span></h2>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Name</th><th>College</th><th>Reg. Number</th><th>Joined At</th></tr></thead>
+            <tbody>
+              {% for user in users %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ user.name }}</td>
+                <td>{{ user.college }}</td>
+                <td><code>{{ user.register_number }}</code></td>
+                <td>{{ user.created_at.strftime('%d %b %Y %H:%M') }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="5" class="empty-cell">No participants yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═══ SUBMISSIONS ═════════════════════════════════════════════ -->
+      <section class="admin-tab-panel" id="panel-submissions" style="display:none">
+        <div class="panel-header">
+          <h2 class="panel-title">Submissions <span class="count-badge">{{ submission_groups|length }} participant(s)</span></h2>
+          <input type="text" id="sub-search" class="form-input" placeholder="Search name / reg no…" style="max-width:220px" />
+        </div>
+
+        {% if submission_groups %}
+          {% for grp in submission_groups %}
+          <div class="participant-block" data-name="{{ grp.user.name|lower }}" data-reg="{{ grp.user.register_number|lower }}">
+            <div class="participant-header" onclick="toggleBlock(this)">
+              <div class="ph-left">
+                <span class="ph-toggle">▶</span>
+                <div class="ph-info">
+                  <span class="ph-name">{{ grp.user.name }}</span>
+                  <span class="ph-meta">{{ grp.user.college }} &nbsp;·&nbsp; <code>{{ grp.user.register_number }}</code></span>
+                </div>
+              </div>
+              <div class="ph-right">
+                <span class="ph-stat">
+                  <span class="ph-stat-label">Solved</span>
+                  <span class="ph-stat-val {% if grp.solved > 0 %}ph-stat-val--good{% endif %}">{{ grp.solved }}/{{ grp.subs|length }}</span>
+                </span>
+                <span class="ph-stat">
+                  <span class="ph-stat-label">Total Score</span>
+                  <span class="ph-stat-val {% if grp.total_score > 0 %}ph-stat-val--good{% endif %}">{{ "%.2f"|format(grp.total_score) }}</span>
+                </span>
+              </div>
+            </div>
+            <div class="participant-subs" style="display:none">
+              <table class="data-table data-table--sm sub-table">
+                <thead>
+                  <tr><th>Language</th><th>Question</th><th>Final Attempts</th><th>Time (s)</th><th>Score</th><th>Result</th><th>Code</th></tr>
+                </thead>
+                <tbody>
+                  {% for sub in grp.subs %}
+                  <tr>
+                    <td><span class="lang-pill lang-pill--sm">{{ sub.problem.language.name }}</span></td>
+                    <td>Q{{ sub.problem.question_number }} — {{ sub.problem.problem_name }}</td>
+                    <td>{{ sub.attempts }}/5</td>
+                    <td>{{ "%.1f"|format(sub.time_taken) }}</td>
+                    <td><span class="score-pill {% if sub.score > 0 %}score-pill--high{% endif %}">{{ sub.score }}</span></td>
+                    <td>{% if sub.is_correct %}<span class="badge badge--success">✓ Correct</span>{% else %}<span class="badge badge--danger">✗ Wrong</span>{% endif %}</td>
+                    <td><button class="btn btn--ghost btn--xs" onclick="showCode(this)" data-code="{{ sub.submitted_code | e }}">View</button></td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">No submissions recorded yet.</div>
+        {% endif %}
+      </section>
+
+      <!-- ═══ LEADERBOARD ═════════════════════════════════════════════ -->
+      <section class="admin-tab-panel" id="panel-leaderboard" style="display:none">
+        <div class="panel-header"><h2 class="panel-title">🏆 Leaderboard</h2></div>
+        <div class="table-wrap">
+          <table class="data-table leaderboard-table">
+            <thead><tr><th>Rank</th><th>Name</th><th>College</th><th>Reg. No.</th><th>Questions Solved</th><th>Total Score</th></tr></thead>
+            <tbody>
+              {% for row in leaderboard %}
+              <tr class="{% if loop.index==1 %}rank-gold{% elif loop.index==2 %}rank-silver{% elif loop.index==3 %}rank-bronze{% endif %}">
+                <td>{% if loop.index==1 %}🥇{% elif loop.index==2 %}🥈{% elif loop.index==3 %}🥉{% else %}{{ loop.index }}{% endif %}</td>
+                <td><strong>{{ row.name }}</strong></td>
+                <td>{{ row.college }}</td>
+                <td><code>{{ row.register_number }}</code></td>
+                <td>{{ row.total_submissions }}</td>
+                <td><span class="score-pill score-pill--high">{{ "%.2f"|format(row.total_score) }}</span></td>
+              </tr>
+              {% else %}
+              <tr><td colspan="6" class="empty-cell">No scored submissions yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═══ VIOLATIONS ══════════════════════════════════════════════ -->
+      <section class="admin-tab-panel" id="panel-violations" style="display:none">
+        <div class="panel-header">
+          <h2 class="panel-title">🚨 Security Violations
+            {% if violations %}
+              <span class="count-badge" style="background:#f85149">{{ violations|length }}</span>
+            {% endif %}
+          </h2>
+        </div>
+
+        {% if violations %}
+        <div class="info-box info-box--danger mb-4">
+          ⚠ The following participants were automatically logged out for violating exam rules
+          (tab switching or exiting fullscreen). Each entry was recorded the moment the violation occurred.
+        </div>
+        {% endif %}
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Participant</th>
+                <th>College</th>
+                <th>Reg. No.</th>
+                <th>Violation</th>
+                <th>Question</th>
+                <th>Detected At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for v in violations %}
+              <tr class="viol-row">
+                <td>{{ loop.index }}</td>
+                <td><strong>{{ v.user.name }}</strong></td>
+                <td>{{ v.user.college }}</td>
+                <td><code>{{ v.user.register_number }}</code></td>
+                <td>
+                  {% if v.violation_type == 'tab_switch' %}
+                    <span class="viol-badge viol-badge--tab">📋 Tab Switch</span>
+                  {% else %}
+                    <span class="viol-badge viol-badge--fs">⬜ Fullscreen Exit</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if v.problem %}
+                    <span class="lang-pill lang-pill--sm">{{ v.problem.language.name }}</span>
+                    Q{{ v.problem.question_number }} — {{ v.problem.problem_name }}
+                  {% else %}
+                    <span class="text-dim">—</span>
+                  {% endif %}
+                </td>
+                <td style="font-family:var(--font-code);font-size:.78rem;color:var(--text-muted)">
+                  {{ v.created_at.strftime('%d %b %Y %H:%M:%S') }}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="7" class="empty-cell">No violations recorded. ✅</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Code Viewer Modal -->
+<div class="modal-overlay" id="code-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Submitted Code</h3>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <pre class="code-block modal-code" id="modal-code-content"></pre>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Tab switching
+document.querySelectorAll('.sidebar-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('sidebar-tab--active'));
+    document.querySelectorAll('.admin-tab-panel').forEach(p => p.style.display = 'none');
+    tab.classList.add('sidebar-tab--active');
+    document.getElementById('panel-' + tab.dataset.tab).style.display = 'block';
+  });
+});
+
+// Participant accordion
+function toggleBlock(header) {
+  const subs   = header.closest('.participant-block').querySelector('.participant-subs');
+  const toggle = header.querySelector('.ph-toggle');
+  const open   = subs.style.display === 'none' || !subs.style.display;
+  subs.style.display = open ? 'block' : 'none';
+  toggle.textContent = open ? '▼' : '▶';
+  header.classList.toggle('ph-open', open);
+}
+
+// Live search
+document.getElementById('sub-search')?.addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.participant-block').forEach(b => {
+    b.style.display = (!q || b.dataset.name.includes(q) || b.dataset.reg.includes(q)) ? '' : 'none';
+  });
+});
+
+// Code modal
+function showCode(btn) {
+  document.getElementById('modal-code-content').textContent = btn.getAttribute('data-code');
+  document.getElementById('code-modal').style.display = 'flex';
+}
+document.getElementById('modal-close').addEventListener('click', () => {
+  document.getElementById('code-modal').style.display = 'none';
+});
+document.getElementById('code-modal').addEventListener('click', e => {
+  if (e.target.id === 'code-modal') e.target.style.display = 'none';
+});
+</script>
+{% endblock %}

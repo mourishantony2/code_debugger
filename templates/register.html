@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Register — Debug Code Event{% endblock %}
+
+{% block body %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="logo-icon">🐛</span>
+      <h1 class="auth-title">Debug Code Event</h1>
+      <p class="auth-subtitle">Register to start the debugging contest</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form" autocomplete="off">
+      <div class="form-group">
+        <label for="name" class="form-label">Full Name</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          class="form-input"
+          placeholder="Enter your full name"
+          required
+          autofocus
+        />
+      </div>
+      <div class="form-group">
+        <label for="college" class="form-label">College / Institution</label>
+        <input
+          type="text"
+          id="college"
+          name="college"
+          class="form-input"
+          placeholder="Enter your college name"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="register_number" class="form-label">Register Number</label>
+        <input
+          type="text"
+          id="register_number"
+          name="register_number"
+          class="form-input"
+          placeholder="e.g. 22BCE1234"
+          required
+        />
+      </div>
+      <button type="submit" class="btn btn--primary btn--full" id="register-btn">
+        Register &amp; Start Contest →
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <a href="{{ url_for('admin.login') }}" class="link-muted">Admin Login</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

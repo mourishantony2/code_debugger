@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Contest Complete — Debug Code Event{% endblock %}
+
+{% block body %}
+<div class="page-wrapper">
+  <header class="top-bar">
+    <div class="top-bar__brand">🐛 Debug Code Event</div>
+    <div class="top-bar__user">
+      <a href="{{ url_for('exam.language_select') }}" class="btn btn--ghost btn--sm">← Back to Languages</a>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn--ghost btn--sm">Logout</a>
+    </div>
+  </header>
+
+  <main class="complete-page">
+    <div class="complete-card">
+      <div class="complete-icon">🏆</div>
+      <h1 class="complete-title">Well Done, {{ user.name }}!</h1>
+      <p class="complete-subtitle">You have completed the Debug Code Event.</p>
+
+      <div class="score-display-big">
+        <span class="score-label">Your Total Score</span>
+        <span class="score-value">{{ total_score }}</span>
+        <span class="score-unit">points</span>
+      </div>
+
+      <div class="complete-details">
+        <div class="detail-item">
+          <span class="detail-label">College</span>
+          <span class="detail-val">{{ user.college }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Register No.</span>
+          <span class="detail-val">{{ user.register_number }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Questions Solved</span>
+          <span class="detail-val">{{ submissions|length }}</span>
+        </div>
+      </div>
+
+      {% if submissions %}
+      <div class="submissions-table-wrap">
+        <h3 class="table-title">Solved Questions</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Question</th>
+              <th>Language</th>
+              <th>Attempts</th>
+              <th>Time Taken (s)</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sub in submissions %}
+            <tr>
+              <td>{{ sub.problem.problem_name }}</td>
+              <td>{{ sub.problem.language.name }}</td>
+              <td>{{ sub.attempts }}</td>
+              <td>{{ "%.1f"|format(sub.time_taken) }}</td>
+              <td><span class="score-pill">{{ sub.score }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <a href="{{ url_for('exam.language_select') }}" class="btn btn--outline mt-4">Try Another Language</a>
+    </div>
+  </main>
+</div>
+{% endblock %}

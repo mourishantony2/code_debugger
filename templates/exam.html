@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}{{ problem.problem_name }} — Debug Code Event{% endblock %}
+
+{% block head %}
+<meta name="time-limit" content="{{ problem.time_limit }}" />
+<meta name="problem-id" content="{{ problem.id }}" />
+<meta name="lang-id" content="{{ lang.id }}" />
+{% endblock %}
+
+{% block body %}
+<div class="exam-wrapper" id="exam-wrapper">
+
+  <!-- Top Bar -->
+  <header class="exam-topbar">
+    <div class="exam-topbar__left">
+      <span class="exam-brand">🐛 Debug Code Event</span>
+      <span class="exam-lang-badge">{{ lang.name }}</span>
+    </div>
+    <div class="exam-topbar__center">
+      <div class="progress-container">
+        <span class="progress-label">Question {{ current_index }} of {{ total_questions }}</span>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" style="width: {{ ((current_index - 1) / total_questions * 100)|int }}%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="exam-topbar__right">
+      <div class="timer-box" id="timer-box">
+        <span class="timer-icon">⏱</span>
+        <span class="timer-display" id="timer-display">{{ "%02d:%02d"|format(problem.time_limit // 60, problem.time_limit % 60) }}</span>
+      </div>
+      <span class="user-badge">{{ session.user_name }}</span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="exam-content">
+
+    <!-- Left: Problem Panel -->
+    <aside class="problem-panel">
+      <div class="problem-header">
+        <span class="question-badge">Q{{ current_index }}</span>
+        <h2 class="problem-title">{{ problem.problem_name }}</h2>
+      </div>
+
+      <div class="problem-section">
+        <h3 class="section-label">⚠ Code with Errors</h3>
+        <pre class="code-block" id="error-code-block">{{ problem.error_code }}</pre>
+      </div>
+
+      <div class="attempts-indicator">
+        <span class="attempts-label">Attempts</span>
+        <div class="attempts-pips">
+          {% for i in range(max_attempts) %}
+            <span class="pip {% if i < attempts_used %}pip--used{% endif %}"></span>
+          {% endfor %}
+        </div>
+        <span class="attempts-text" id="attempts-text">{{ attempts_used }}/{{ max_attempts }}</span>
+      </div>
+    </aside>
+
+    <!-- Right: Editor Panel -->
+    <section class="editor-panel">
+      <div class="editor-header">
+        <span class="editor-label">✏ Your Fix</span>
+        <button class="btn btn--ghost btn--sm" id="clear-btn">Clear</button>
+      </div>
+
+      <textarea
+        id="code-editor"
+        class="code-editor"
+        placeholder="Paste or type your corrected code here..."
+        spellcheck="false"
+        autocorrect="off"
+        autocapitalize="off"
+      >{{ problem.error_code }}</textarea>
+
+      <!-- Result Banner (hidden by default) -->
+      <div class="result-banner result-banner--correct" id="result-correct" style="display:none">
+        <span class="result-icon">✅</span>
+        <div class="result-text">
+          <strong>Correct!</strong>
+          <span id="score-display"></span>
+        </div>
+        <div class="expected-output-block">
+          <span class="output-label">Expected Output:</span>
+          <pre id="expected-output-text" class="output-code"></pre>
+        </div>
+        <button class="btn btn--primary" id="next-question-btn">Next Question →</button>
+      </div>
+
+      <div class="result-banner result-banner--wrong" id="result-wrong" style="display:none">
+        <span class="result-icon">❌</span>
+        <div class="result-text">
+          <strong>Wrong Answer.</strong>
+          <span id="wrong-message"></span>
+        </div>
+      </div>
+
+      <div class="result-banner result-banner--expired" id="result-expired" style="display:none">
+        <span class="result-icon">⏰</span>
+        <div class="result-text"><strong>Time's up!</strong> Moving to next question...</div>
+      </div>
+
+      <div class="editor-footer">
+        <button class="btn btn--primary btn--lg" id="submit-btn">
+          <span id="submit-text">Submit Answer</span>
+        </button>
+        <span class="shortcut-hint">Tab inserts spaces · Ctrl+Enter to submit</span>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- Fullscreen Prompt -->
+<div class="fullscreen-overlay" id="fullscreen-overlay" style="display:none">
+  <div class="fullscreen-modal">
+    <h2>⚠ Fullscreen Required</h2>
+    <p>This exam must run in fullscreen mode. Please click the button below to continue.</p>
+    <button class="btn btn--primary btn--lg" id="enter-fullscreen-btn">Enter Fullscreen</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.EXAM_CONFIG = {
+    timeLimit: {{ problem.time_limit }},
+    problemId: {{ problem.id }},
+    langId: {{ lang.id }},
+    submitUrl: "{{ url_for('exam.submit') }}",
+    nextUrl: "{{ url_for('exam.start_language', lang_id=lang.id) }}",
+    completeUrl: "{{ url_for('exam.complete') }}",
+    attemptsUsed: {{ attempts_used }},
+    maxAttempts: {{ max_attempts }},
+    totalQuestions: {{ total_questions }},
+    currentIndex: {{ current_index }},
+  };
+</script>
+<script src="{{ url_for('static', filename='js/exam.js') }}"></script>
+{% endblock %}
