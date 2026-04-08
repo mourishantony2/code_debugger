@@ -54,10 +54,23 @@ def dashboard():
     users     = list(User.objects.order_by("-created_at"))
 
     # ── Submissions: group by user → best submission per question ────────────
-    all_subs = list(
+    from mongoengine.errors import DoesNotExist
+
+    all_subs_raw = list(
         Submission.objects.order_by("user", "problem", "attempts")
         .select_related(max_depth=2)
     )
+
+    # Filter out submissions whose problem or user was deleted (orphaned DBRefs)
+    all_subs = []
+    for sub in all_subs_raw:
+        try:
+            _ = sub.user.id
+            _ = sub.problem.id
+            _ = sub.problem.language.name
+            all_subs.append(sub)
+        except DoesNotExist:
+            pass
 
     best_map = {}                           # (user_id, problem_id) → Submission
     for sub in all_subs:
@@ -110,7 +123,22 @@ def dashboard():
             })
 
     # ── Violations ────────────────────────────────────────────────────────────
-    violations = list(Violation.objects.order_by("-created_at").select_related(max_depth=2))
+    # Safely resolve violations — any whose user/problem was deleted are excluded
+    violations_raw = list(Violation.objects.order_by("-created_at").select_related(max_depth=2))
+    violations = []
+    for v in violations_raw:
+        try:
+            _ = v.user.id          # ensure user still exists
+            # For problem: set to None if it's an orphaned reference
+            if v.problem is not None:
+                try:
+                    _ = v.problem.id
+                    _ = v.problem.language.name
+                except DoesNotExist:
+                    v.problem = None   # nullify the broken reference
+            violations.append(v)
+        except DoesNotExist:
+            pass                   # skip violations whose user was also deleted
 
     return render_template(
         "admin_dashboard.html",
