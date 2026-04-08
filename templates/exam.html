@@ -127,15 +127,15 @@
 <script>
   window.EXAM_CONFIG = {
     timeLimit: {{ problem.time_limit }},
-    problemId: {{ problem.id }},
-    langId: {{ lang.id }},
+    problemId: "{{ problem.id }}",
+    langId:    "{{ lang.id }}",
     submitUrl: "{{ url_for('exam.submit') }}",
-    nextUrl: "{{ url_for('exam.start_language', lang_id=lang.id) }}",
+    nextUrl:   "{{ url_for('exam.start_language', lang_id=lang.id) }}",
     completeUrl: "{{ url_for('exam.complete') }}",
     attemptsUsed: {{ attempts_used }},
-    maxAttempts: {{ max_attempts }},
+    maxAttempts:  {{ max_attempts }},
     totalQuestions: {{ total_questions }},
-    currentIndex: {{ current_index }},
+    currentIndex:   {{ current_index }},
   };
 </script>
 <script src="{{ url_for('static', filename='js/exam.js') }}"></script>
